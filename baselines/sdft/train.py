@@ -36,8 +36,8 @@ def make_trigger(argv: Sequence[str] | None = None):
     trigger = build_trigger(
         args,
         method="sdft",
-        trainer="paper_reproduction/qwen3/workers/sdft.py",
-        deepspeed_config="paper_reproduction/qwen3/deepspeed/zero3.json",
+        trainer="workers/sdft.py",
+        deepspeed_config="deepspeed/zero3.json",
     )
     trigger.command.extend(
         [

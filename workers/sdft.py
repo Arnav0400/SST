@@ -12,13 +12,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.trainer_utils import get_last_checkpoint
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from paper_reproduction.qwen3.common.data import build_sdft_dataset  # noqa: E402
-from paper_reproduction.qwen3.common.training import rank_zero, worker_parser  # noqa: E402
-from paper_reproduction.qwen3.vendor.sdft import DistilConfig, DistilTrainer  # noqa: E402
+from common.data import build_sdft_dataset  # noqa: E402
+from common.training import rank_zero, worker_parser  # noqa: E402
+from vendor.sdft import DistilConfig, DistilTrainer  # noqa: E402
 
 
 def main() -> None:

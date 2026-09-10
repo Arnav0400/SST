@@ -6,12 +6,12 @@ import json
 import unittest
 from pathlib import Path
 
-from paper_reproduction.qwen3._shared import DATASETS, DATASET_PATHS, SHARED_HPARAMS
-from paper_reproduction.qwen3.baselines.oplora.train import make_trigger as make_oplora
-from paper_reproduction.qwen3.baselines.sculpting.train import make_trigger as make_sculpting
-from paper_reproduction.qwen3.baselines.sdft.train import make_trigger as make_sdft
-from paper_reproduction.qwen3.baselines.sft.train import make_trigger as make_sft
-from paper_reproduction.qwen3.sst.train import make_trigger as make_sst
+from _shared import DATASETS, DATASET_PATHS, SHARED_HPARAMS
+from baselines.oplora.train import make_trigger as make_oplora
+from baselines.sculpting.train import make_trigger as make_sculpting
+from baselines.sdft.train import make_trigger as make_sdft
+from baselines.sft.train import make_trigger as make_sft
+from sst.train import make_trigger as make_sst
 
 
 HERE = Path(__file__).resolve().parent

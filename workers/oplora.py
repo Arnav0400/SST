@@ -14,12 +14,12 @@ from transformers import Trainer
 from transformers.trainer_utils import get_last_checkpoint
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from paper_reproduction.qwen3.common.data import SFTDataCollator  # noqa: E402
-from paper_reproduction.qwen3.common.training import (  # noqa: E402
+from common.data import SFTDataCollator  # noqa: E402
+from common.training import (  # noqa: E402
     load_model_and_tokenizer,
     prepared_sft_dataset,
     rank_zero,

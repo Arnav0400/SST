@@ -17,23 +17,11 @@ wandb/
 *.log
 logs/
 
-# Datasets (large, regenerated via scripts/build_*.py or fetched from HF)
-data/
-!paper_reproduction/qwen3/data/
-!paper_reproduction/qwen3/data/**
+# Generated dataset intermediates
+data/**/cache-*.arrow
+data/**/*.jsonl
 
 # Local env
 .env
 .venv/
 
-# Analysis artifacts (heavy, locally generated)
-analysis/
-
-# Vendored / duplicated under sdft/
-sdft/data
-sdft/data/
-sdft/lm_eval_harness/
-
-# Runtime-only safety symlinks (not part of canonical layout)
-scripts/thickets/
-greenland/.eval_inflight/

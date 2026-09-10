@@ -10,7 +10,7 @@ from typing import Any
 import torch
 from datasets import Dataset, load_from_disk
 
-from paper_reproduction.qwen3._shared import DATASET_PATHS
+from _shared import DATASET_PATHS
 
 THINKING_DATASETS = frozenset(DATASET_PATHS)
 _THINK_BLOCK = re.compile(r"<think>.*?</think>\s*", re.DOTALL)

@@ -36,8 +36,8 @@ def make_trigger(argv: Sequence[str] | None = None):
     trigger = build_trigger(
         args,
         method="sculpting",
-        trainer="paper_reproduction/qwen3/workers/sculpting.py",
-        deepspeed_config="paper_reproduction/qwen3/deepspeed/zero2.json",
+        trainer="workers/sculpting.py",
+        deepspeed_config="deepspeed/zero2.json",
     )
     trigger.command.extend(
         [

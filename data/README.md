@@ -21,7 +21,7 @@ The Arrow payloads are stored with Git LFS:
 ```bash
 git lfs install
 git lfs pull
-python paper_reproduction/qwen3/verify_data.py
+python verify_data.py
 ```
 
 The source snapshots' `dataset_info.json` files do not declare licenses. Confirm

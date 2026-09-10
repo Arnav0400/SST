@@ -15,7 +15,7 @@ from typing import Any
 
 
 QWEN3_ROOT = Path(__file__).resolve().parent
-REPO_ROOT = QWEN3_ROOT.parents[1]
+REPO_ROOT = QWEN3_ROOT
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "paper_runs" / "qwen3"
 
 DATASETS = {

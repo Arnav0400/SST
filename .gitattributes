@@ -1,4 +1,4 @@
-paper_reproduction/qwen3/data/qwen3_science/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
-paper_reproduction/qwen3/data/qwen3_medicine/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
-paper_reproduction/qwen3/data/qwen3_pathology/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
-paper_reproduction/qwen3/data/qwen3_finqa/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
+data/qwen3_science/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
+data/qwen3_medicine/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
+data/qwen3_pathology/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text
+data/qwen3_finqa/train_data/*.arrow filter=lfs diff=lfs merge=lfs -text

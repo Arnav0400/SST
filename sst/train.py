@@ -29,8 +29,8 @@ def make_trigger(argv: Sequence[str] | None = None):
     trigger = build_trigger(
         args,
         method="sst",
-        trainer="paper_reproduction/qwen3/workers/sst.py",
-        deepspeed_config="paper_reproduction/qwen3/deepspeed/zero2.json",
+        trainer="workers/sst.py",
+        deepspeed_config="deepspeed/zero2.json",
     )
     trigger.command.extend(["--rank_percent", str(config["rank_percent"])])
     return trigger, config

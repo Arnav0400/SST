@@ -10,7 +10,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from transformers.trainer_utils import get_last_checkpoint
 
-from paper_reproduction.qwen3.common.data import (
+from common.data import (
     SFTDataCollator,
     load_training_dataset,
     preprocess_sft,
