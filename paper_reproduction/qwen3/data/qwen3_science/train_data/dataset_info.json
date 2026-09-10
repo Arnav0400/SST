@@ -1,0 +1,61 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "science",
+  "dataset_name": "mixture-of-thoughts",
+  "dataset_size": 1590786892,
+  "description": "",
+  "download_size": 674333812,
+  "features": {
+    "messages": {
+      "feature": {
+        "content": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "role": {
+          "dtype": "string",
+          "_type": "Value"
+        }
+      },
+      "_type": "List"
+    },
+    "output_text": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "meta": {
+      "expected_answer": {
+        "dtype": "string",
+        "_type": "Value"
+      },
+      "source": {
+        "dtype": "string",
+        "_type": "Value"
+      }
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 2265120704,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 1590786892,
+      "num_examples": 172514,
+      "shard_lengths": [
+        58129,
+        57129,
+        52128,
+        5128
+      ],
+      "dataset_name": "mixture-of-thoughts"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

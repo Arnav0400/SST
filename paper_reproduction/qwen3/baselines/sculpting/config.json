@@ -1,0 +1,14 @@
+{
+  "minimum_retention_ratio": 0.1,
+  "target_retention_ratio": 0.8,
+  "calibration_samples": null,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ]
+}

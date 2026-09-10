@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.Python
+
+# Training outputs / runs
+runs/
+outputs/
+checkpoints/
+paper_runs/
+wandb/
+.wandb/
+
+# Logs
+*.log
+logs/
+
+# Datasets (large, regenerated via scripts/build_*.py or fetched from HF)
+data/
+!paper_reproduction/qwen3/data/
+!paper_reproduction/qwen3/data/**
+
+# Local env
+.env
+.venv/
+
+# Analysis artifacts (heavy, locally generated)
+analysis/
+
+# Vendored / duplicated under sdft/
+sdft/data
+sdft/data/
+sdft/lm_eval_harness/
+
+# Runtime-only safety symlinks (not part of canonical layout)
+scripts/thickets/
+greenland/.eval_inflight/

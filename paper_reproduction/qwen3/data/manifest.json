@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "format": "huggingface-datasets-save-to-disk",
+  "total_examples": 31995,
+  "total_arrow_bytes": 160115000,
+  "datasets": {
+    "qwen3_science": {
+      "directory": "qwen3_science/train_data",
+      "examples": 9000,
+      "arrow_file": "data-00000-of-00001.arrow",
+      "arrow_bytes": 81992912,
+      "sha256": "274027cd568b93be5f93c3d202075e02dc503248469dd95296cb09d8316aee96"
+    },
+    "qwen3_medicine": {
+      "directory": "qwen3_medicine/train_data",
+      "examples": 8996,
+      "arrow_file": "data-00000-of-00001.arrow",
+      "arrow_bytes": 27345448,
+      "sha256": "b9379e95452df1abd13e30d569754c2ba3d1fcd3564f0fdc632e712902dced25"
+    },
+    "qwen3_pathology": {
+      "directory": "qwen3_pathology/train_data",
+      "examples": 8999,
+      "arrow_file": "data-00000-of-00001.arrow",
+      "arrow_bytes": 25425040,
+      "sha256": "a1ce9795ba6cd0849ea39b5331010daeb2cfe69ac85eacdfd9b935cd2d028d46"
+    },
+    "qwen3_finqa": {
+      "directory": "qwen3_finqa/train_data",
+      "examples": 5000,
+      "arrow_file": "data-00000-of-00001.arrow",
+      "arrow_bytes": 25351600,
+      "sha256": "b3aa0951a60e60adccdd6d8d29d8cb406f2da09b8a854f2df53373dccec86e78"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+"""SST paper trigger."""
