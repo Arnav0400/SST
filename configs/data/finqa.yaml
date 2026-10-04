@@ -1,0 +1,3 @@
+dataset_id: qwen3_finqa
+path: data/qwen3_finqa/train_data
+thinking: true

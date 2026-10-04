@@ -1,0 +1,10 @@
+lora_rank: 32
+lora_alpha: 32
+lora_dropout: 0.05
+projection_rank: 128
+target_modules:
+  - q_proj
+  - v_proj
+  - up_proj
+  - down_proj
+  - o_proj

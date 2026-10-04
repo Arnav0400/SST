@@ -1,8 +1,7 @@
-# Qwen3 reproduction datasets
+# Datasets
 
-This directory contains the exact saved Hugging Face dataset snapshots used by
-the main Qwen3 experiments. Training reads these files directly; it does not
-depend on the repository's old production data tree or data-building scripts.
+This directory contains the saved Hugging Face datasets used by the default SST
+configs.
 
 | Dataset | Examples | Arrow bytes | SHA-256 |
 |---|---:|---:|---|
@@ -12,18 +11,13 @@ depend on the repository's old production data tree or data-building scripts.
 | FinQA | 5,000 | 25,351,600 | `b3aa0951a60e60adccdd6d8d29d8cb406f2da09b8a854f2df53373dccec86e78` |
 | **Total** | **31,995** | **160,115,000 (153 MiB)** | |
 
-Only the canonical `data-00000-of-00001.arrow`, `dataset_info.json`, and
-`state.json` files are included. Generated `cache-*.arrow` files and the
-medicine JSONL intermediates were intentionally omitted.
-
 The Arrow payloads are stored with Git LFS:
 
 ```bash
-git lfs install
 git lfs pull
-python verify_data.py
+python scripts/verify_data.py
 ```
 
-The source snapshots' `dataset_info.json` files do not declare licenses. Confirm
-the redistribution terms of the underlying source datasets before publishing a
-public mirror or derived archive.
+Generated `cache-*.arrow` files and intermediate JSONL files are not tracked.
+The saved metadata does not declare source licenses; confirm source
+redistribution terms before publishing a public data mirror.

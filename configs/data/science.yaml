@@ -1,0 +1,3 @@
+dataset_id: qwen3_science
+path: data/qwen3_science/train_data
+thinking: true

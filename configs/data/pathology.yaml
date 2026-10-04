@@ -1,0 +1,3 @@
+dataset_id: qwen3_pathology
+path: data/qwen3_pathology/train_data
+thinking: true

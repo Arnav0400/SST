@@ -9,7 +9,6 @@ __pycache__/
 runs/
 outputs/
 checkpoints/
-paper_runs/
 wandb/
 .wandb/
 
@@ -24,4 +23,3 @@ data/**/*.jsonl
 # Local env
 .env
 .venv/
-

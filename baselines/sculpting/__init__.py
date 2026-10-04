@@ -1,1 +1,0 @@
-"""Sculpting baseline trigger."""
