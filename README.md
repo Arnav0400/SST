@@ -8,6 +8,13 @@ The repository includes SST, four commonly used fine-tuning baselines, a
 Qwen3-8B configuration, and four ready-to-run datasets. The layout follows a
 simple method/config/script split:
 
+## Visual guide
+
+Read the illustrated, first-principles explanation:
+[**Learning without forgetting**](https://arnav0400.github.io/SST/).
+
+[![SST visual guide](docs/preview.png)](https://arnav0400.github.io/SST/)
+
 ```text
 SST/
 ├── sst/                    # library and training implementations
@@ -23,6 +30,7 @@ SST/
 │   └── deepspeed/
 ├── scripts/                # one launcher per method
 ├── data/                   # Git-LFS-backed datasets
+├── docs/                   # hosted visual guide and paper figures
 └── tests/
 ```
 
