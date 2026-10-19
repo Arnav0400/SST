@@ -1,42 +1,72 @@
-# SST
+<div align="center">
 
-Official implementation of **SST**, a subspace-constrained fine-tuning method
-for updating language models while limiting movement along protected weight
-directions.
+# Subspace Tuning (SST)
 
-The repository includes SST, four commonly used fine-tuning baselines, a
-Qwen3-8B configuration, and four ready-to-run datasets. The layout follows a
-simple method/config/script split:
+### Learning without forgetting.
 
-## Visual guide
+SST constrains fine-tuning updates to non-principal weight directions, preserving
+prior capability while leaving room to learn.
 
-Read the illustrated, first-principles explanation:
-[**Learning without forgetting**](https://arnav0400.github.io/SST/).
+[Visual guide](https://arnav0400.github.io/SST/) ·
+[Paper](docs/assets/sst-paper.pdf) ·
+[Methods](sst/methods/README.md) ·
+[Configuration](configs/README.md) ·
+[Commands](scripts/README.md)
 
-[![SST visual guide](docs/preview.png)](https://arnav0400.github.io/SST/)
+</div>
 
-```text
-SST/
-├── sst/                    # library and training implementations
-│   ├── cli.py
-│   ├── data.py
-│   ├── training.py
-│   ├── methods/            # sst, sft, sdft, oplora, sculpting
-│   └── vendor/sdft/
-├── configs/
-│   ├── model/qwen3-8b.yaml
-│   ├── data/{science,medicine,pathology,finqa}.yaml
-│   ├── method/{sst,sft,sdft,oplora,sculpting}.yaml
-│   └── deepspeed/
-├── scripts/                # one launcher per method
-├── data/                   # Git-LFS-backed datasets
-├── docs/                   # hosted visual guide and paper figures
-└── tests/
-```
+Fine-tuning can improve a target task while sharply degrading capabilities the
+base model already had. SST changes **where the optimizer update lands**. For a
+weight matrix with top-$k$ singular vectors $U_k,V_k$, it applies
 
-## Installation
+$$
+\Delta W_{\mathrm{SST}}
+=
+(I-U_kU_k^\top)\,\Delta W\,(I-V_kV_k^\top).
+$$
+
+The projection acts on the applied optimizer update—not only the raw
+gradient—making the formulation optimizer-agnostic. The paper evaluates it
+with Adam, Muon, and different training recipes.
+
+<p align="center">
+  <a href="https://arnav0400.github.io/SST/">
+    <img src="docs/assets/learning-retention-frontier.png" width="680" alt="Learning-retention frontier for Qwen3-8B across four domains">
+  </a>
+</p>
+
+## Results
+
+On Qwen3-8B, averaged over Science, FinQA, Pathology, and Medicine (paper
+Table 5):
+
+| Method | New-task accuracy ↑ | Prior capability ↑ |
+|---|---:|---:|
+| Base model | 71.0 | 81.0 |
+| SFT | 75.8 | 37.6 |
+| **SFT + SST** | **75.7** | **79.6** |
+
+- On FinQA, SFT reaches 72.3 target accuracy while prior capability falls to
+  23.7; SST reaches 73.0 while retaining prior capability at 82.3.
+- Across Qwen3 models from 1.7B to 14B, five-epoch SFT loses roughly 30–40
+  points of prior capability. SST approaches the base capability as scale grows.
+- Across the tested model sizes and recipes, SST produces 2–4× less KL drift
+  from the base policy.
+
+<p align="center">
+  <img src="docs/assets/model-scaling.png" width="760" alt="Qwen3 model scaling results for prior capability and new-task accuracy">
+</p>
+
+These are paper results. This repository contains the training implementations,
+configs, and datasets; see the [paper](docs/assets/sst-paper.pdf) for the full
+evaluation protocol and tables.
+
+## Quick start
 
 ```bash
+git clone https://github.com/Arnav0400/SST.git
+cd SST
+
 git lfs install
 git lfs pull
 
@@ -45,119 +75,25 @@ source .venv/bin/activate
 pip install -e .
 
 python scripts/verify_data.py
-```
-
-## Training
-
-Each method has its own launcher. The first argument is the dataset:
-
-```bash
-# SST
-bash scripts/train_sst.sh science
-
-# Baselines
-bash scripts/train_sft.sh science
-bash scripts/train_sdft.sh science
-bash scripts/train_oplora.sh science
-bash scripts/train_sculpting.sh science
-```
-
-Replace `science` with `medicine`, `pathology`, or `finqa`.
-
-The equivalent Python interface is:
-
-```bash
-python -m sst --method sst --dataset science
-python -m sst --method sft --dataset medicine
-```
-
-Useful options:
-
-```bash
-# Inspect the resolved DeepSpeed command.
 bash scripts/train_sst.sh science --dry-run
-
-# Use four GPUs while preserving global batch size 16.
-bash scripts/train_sst.sh science --num-gpus 4
-
-# Enable Weights & Biases logging.
-bash scripts/train_sst.sh science --report-to wandb
-
-# Select an output directory.
-bash scripts/train_sst.sh science --output-dir runs/my_sst_run
+bash scripts/train_sst.sh science
 ```
 
-Runs are written to `runs/<dataset>/<method>/` by default. Each run records its
-resolved settings and launch command in `run_config.json`.
+The default recipe uses Qwen3-8B, eight GPUs, bf16, and global batch size 16.
+Use `science`, `finqa`, `pathology`, or `medicine` as the dataset name.
 
-## Configuration
+## Included
 
-Configuration is split by concern, following the same composition pattern used
-by the launch scripts:
+| Area | Contents | Guide |
+|---|---|---|
+| Methods | SST, SFT, SDFT, OPLoRA, Sculpting | [Method notes](sst/methods/README.md) |
+| Configs | Model, data, method, and DeepSpeed settings | [Configuration](configs/README.md) |
+| Launchers | One shell entry point per method | [Commands](scripts/README.md) |
+| Data | 31,995 training examples through Git LFS | [Datasets](data/README.md) |
+| Explanation | First-principles illustrated walkthrough | [Visual guide](https://arnav0400.github.io/SST/) |
 
-- [`configs/model/qwen3-8b.yaml`](configs/model/qwen3-8b.yaml) contains the
-  shared model and optimizer settings.
-- [`configs/data/`](configs/data) maps short dataset names to local paths.
-- [`configs/method/`](configs/method) contains only method-specific settings.
-- [`configs/deepspeed/`](configs/deepspeed) contains the distributed runtime
-  settings.
-
-SST intentionally exposes one method hyperparameter:
-
-```yaml
-rank_percent: 99
-```
-
-The default Qwen3-8B settings are shared across all methods:
-
-| Setting | Value |
-|---|---:|
-| Model | `Qwen/Qwen3-8B` |
-| Learning rate | `5e-5` |
-| Epochs | `2` |
-| Global batch size | `16` |
-| Micro-batch size | `1` |
-| Warmup steps | `10` |
-| Scheduler | cosine |
-| Weight decay | `0` |
-| Max sequence length | `4096` |
-| Precision | bf16 |
-| Seed | `42` |
-
-## Datasets
-
-| Name | Examples | Config |
-|---|---:|---|
-| Science | 9,000 | [`science.yaml`](configs/data/science.yaml) |
-| Medicine | 8,996 | [`medicine.yaml`](configs/data/medicine.yaml) |
-| Pathology | 8,999 | [`pathology.yaml`](configs/data/pathology.yaml) |
-| FinQA | 5,000 | [`finqa.yaml`](configs/data/finqa.yaml) |
-
-To train on another saved Hugging Face dataset with `messages` and
-`output_text` columns:
-
-```bash
-python -m sst \
-  --method sst \
-  --dataset my_data \
-  --data-path /path/to/my_data
-```
-
-Use `--no-thinking` if the dataset should use the non-thinking chat template.
-
-## Baselines
-
-The included baselines are vanilla SFT, SDFT, OPLoRA, and adaptive Sculpting.
-Their public settings live in separate files under
-[`configs/method/`](configs/method); the implementations live beside SST under
-[`sst/methods/`](sst/methods).
-
-## Tests
+Run the interface tests with:
 
 ```bash
 python -m unittest discover -s tests
 ```
-
-The tests validate config composition, all method/dataset combinations,
-SST's one-parameter interface, global-batch preservation, and the public launch
-scripts.
