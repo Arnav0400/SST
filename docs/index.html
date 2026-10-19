@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A first-principles visual explanation of Subspace Tuning: why fine-tuning forgets, how SST redirects optimizer updates, and what the experiments show.">
   <meta name="theme-color" content="#fbfaf7">
-  <title>Subspace Tuning — Learning without forgetting</title>
+  <title>Subspace Tuning: Learning without forgetting</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,8 +17,8 @@
       <a href="#problem">Problem</a>
       <a href="#geometry">Geometry</a>
       <a href="#method">Method</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#limits">Limits</a>
+      <a href="#results">Results</a>
+      <a href="#overhead">Overhead</a>
     </nav>
     <a href="assets/sst-paper.pdf">Paper ↗</a>
   </header>
@@ -248,7 +248,7 @@
 
       <section class="section" id="method">
         <p class="kicker">03 · The method</p>
-        <h2>Project the applied update—not the gradient</h2>
+        <h2>Project the applied update, not the gradient</h2>
         <p>
           With plain SGD, projecting the gradient and projecting the step are equivalent because
           the step is only a scalar multiple of the gradient. Adam and other preconditioning
@@ -397,9 +397,9 @@ for step in training_steps:
         </p>
       </section>
 
-      <section class="section" id="evidence">
-        <p class="kicker">04 · The evidence</p>
-        <h2>Does the geometry matter behaviorally?</h2>
+      <section class="section" id="results">
+        <p class="kicker">04 · Experiments</p>
+        <h2>Results</h2>
 
         <p class="subhead"><strong>Can the model learn while retaining?</strong></p>
         <p>
@@ -505,9 +505,9 @@ for step in training_steps:
         </figure>
       </section>
 
-      <section class="section" id="limits">
+      <section class="section" id="overhead">
         <p class="kicker">05 · Practical view</p>
-        <h2>What SST costs—and what it does not prove</h2>
+        <h2>Overhead</h2>
 
         <dl class="costs">
           <div>
