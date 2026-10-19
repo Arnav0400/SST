@@ -17,13 +17,12 @@ prior capability while leaving room to learn.
 
 Fine-tuning can improve a target task while sharply degrading capabilities the
 base model already had. SST changes **where the optimizer update lands**. For a
-weight matrix with top-$k$ singular vectors $U_k,V_k$, it applies
+weight matrix with principal singular-vector bases `U_k` and `V_k`, it
+applies
 
-$$
-\Delta W_{\mathrm{SST}}
-=
-(I-U_kU_k^\top)\,\Delta W\,(I-V_kV_k^\top).
-$$
+```math
+\Delta W_{\mathrm{SST}} = (I-U_kU_k^\top)\,\Delta W\,(I-V_kV_k^\top)
+```
 
 The projection acts on the applied optimizer update—not only the raw
 gradient—making the formulation optimizer-agnostic. The paper evaluates it
