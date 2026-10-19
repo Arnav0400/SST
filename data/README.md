@@ -19,5 +19,17 @@ python scripts/verify_data.py
 ```
 
 Generated `cache-*.arrow` files and intermediate JSONL files are not tracked.
-The saved metadata does not declare source licenses; confirm source
-redistribution terms before publishing a public data mirror.
+
+## Provenance
+
+The bundled snapshots are derived from the paper's training sets:
+
+| Snapshot | Upstream source | Upstream terms |
+|---|---|---|
+| Science | [Open R1 Mixture-of-Thoughts](https://huggingface.co/datasets/open-r1/Mixture-of-Thoughts), science subset | The source subset comes from NVIDIA's Llama-Nemotron post-training data; consult its per-sample terms |
+| FinQA | [FinQA](https://github.com/czyssrs/FinQA) and [ConvFinQA](https://github.com/czyssrs/ConvFinQA) | MIT |
+| Medicine, Pathology | [MedMCQA](https://huggingface.co/datasets/openlifescienceai/medmcqa) questions with generated reasoning traces | Apache-2.0 metadata for MedMCQA; traces are additional generated annotations |
+
+These links are provided for attribution and provenance. Review the upstream
+terms for the exact samples and intended use before redistributing another
+mirror.
