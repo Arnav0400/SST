@@ -7,8 +7,8 @@
 SST constrains fine-tuning updates to non-principal weight directions, preserving
 prior capability while leaving room to learn.
 
-[Visual guide](https://arnav0400.github.io/SST/) ·
-[Paper](docs/assets/sst-paper.pdf) ·
+[Blog](https://ac-notes.notion.site/Towards-Continual-Learning-Mitigating-Forgetting-With-Subspace-Tuning-a85018c81bd1461ba061570b49ce9a0e) ·
+[Paper](assets/sst-paper.pdf) ·
 [Methods](sst/methods/README.md) ·
 [Configuration](configs/README.md) ·
 [Commands](scripts/README.md)
@@ -29,8 +29,8 @@ gradient—making the formulation optimizer-agnostic. The paper evaluates it
 with Adam, Muon, and different training recipes.
 
 <p align="center">
-  <a href="https://arnav0400.github.io/SST/">
-    <img src="docs/assets/learning-retention-frontier.png" width="680" alt="Learning-retention frontier for Qwen3-8B across four domains">
+  <a href="https://ac-notes.notion.site/Towards-Continual-Learning-Mitigating-Forgetting-With-Subspace-Tuning-a85018c81bd1461ba061570b49ce9a0e">
+    <img src="assets/learning-retention-frontier.png" width="680" alt="Learning-retention frontier for Qwen3-8B across four domains">
   </a>
 </p>
 
@@ -53,11 +53,11 @@ Table 5):
   from the base policy.
 
 <p align="center">
-  <img src="docs/assets/model-scaling.png" width="760" alt="Qwen3 model scaling results for prior capability and new-task accuracy">
+  <img src="assets/model-scaling.png" width="760" alt="Qwen3 model scaling results for prior capability and new-task accuracy">
 </p>
 
 These are paper results. This repository contains the training implementations,
-configs, and datasets; see the [paper](docs/assets/sst-paper.pdf) for the full
+configs, and datasets; see the [paper](assets/sst-paper.pdf) for the full
 evaluation protocol and tables.
 
 ## Quick start
@@ -89,7 +89,7 @@ Use `science`, `finqa`, `pathology`, or `medicine` as the dataset name.
 | Configs | Model, data, method, and DeepSpeed settings | [Configuration](configs/README.md) |
 | Launchers | One shell entry point per method | [Commands](scripts/README.md) |
 | Data | 31,995 training examples through Git LFS | [Datasets](data/README.md) |
-| Explanation | First-principles illustrated walkthrough | [Visual guide](https://arnav0400.github.io/SST/) |
+| Explanation | Continual learning and mitigating forgetting with subspace tuning | [Blog](https://ac-notes.notion.site/Towards-Continual-Learning-Mitigating-Forgetting-With-Subspace-Tuning-a85018c81bd1461ba061570b49ce9a0e) |
 
 Run the interface tests with:
 
