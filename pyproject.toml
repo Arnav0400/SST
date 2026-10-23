@@ -1,24 +1,39 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sst"
-version = "0.1.0"
+name = "sst-torch"
+version = "0.2.0"
 description = "Official implementation of SST for subspace-constrained language-model fine-tuning."
 readme = "README.md"
+license = "MIT AND Apache-2.0"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "licenses/Apache-2.0.txt"]
 requires-python = ">=3.10"
 dependencies = [
-  "accelerate==1.11.0",
-  "datasets==4.3.0",
-  "deepspeed==0.18.4",
-  "flashinfer-python==0.5.3",
+  "torch>=2.6",
+]
+
+[project.optional-dependencies]
+transformers = [
+  "accelerate>=1.11.0",
+  "transformers>=4.57",
+]
+train = [
+  "accelerate>=1.11.0",
+  "datasets>=4.3.0",
+  "deepspeed>=0.18.4",
+  "flashinfer-python>=0.5.3",
   "PyYAML>=6.0",
   "safetensors>=0.4.5",
-  "torch==2.9.0",
-  "transformers==4.57.1",
-  "trl==0.24.0",
-  "vllm==0.12.0",
+  "transformers>=4.57",
+  "trl>=0.24.0",
+  "vllm>=0.12.0",
+]
+test = [
+  "accelerate>=1.11.0",
+  "PyYAML>=6.0",
+  "transformers>=4.57",
 ]
 
 [project.scripts]

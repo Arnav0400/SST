@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import os
 from pathlib import Path
 
@@ -118,16 +119,28 @@ def train_sft_model(
     tokenizer,
     *,
     callbacks=None,
+    optimizer_wrapper=None,
     save_total_limit: int = 1,
 ) -> Trainer:
+    extra = {}
+    if optimizer_wrapper is not None:
+        if "optimizer_wrapper" not in inspect.signature(Trainer.__init__).parameters:
+            raise RuntimeError(
+                "This SST recipe requires the native Transformers optimizer-wrapper integration. "
+                "See docs/huggingface-integration.md for installation instructions."
+            )
+        extra["optimizer_wrapper"] = optimizer_wrapper
     trainer = Trainer(
         model=model,
         args=training_arguments(args, save_total_limit=save_total_limit),
         train_dataset=prepared_sft_dataset(args, tokenizer),
         data_collator=SFTDataCollator(tokenizer),
         callbacks=list(callbacks or []),
+        **extra,
     )
-    checkpoint = get_last_checkpoint(args.output_dir) if os.path.isdir(args.output_dir) else None
+    checkpoint = (
+        get_last_checkpoint(args.output_dir) if os.path.isdir(args.output_dir) else None
+    )
     trainer.train(resume_from_checkpoint=checkpoint)
     final_dir = Path(args.output_dir) / "final"
     trainer.save_model(str(final_dir))
