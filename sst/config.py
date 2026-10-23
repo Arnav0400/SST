@@ -14,7 +14,7 @@ DEFAULT_CONFIG_DIR = ROOT / "configs"
 METHODS = ("sst", "sft", "sdft", "oplora", "sculpting")
 
 METHOD_KEYS = {
-    "sst": {"rank_percent"},
+    "sst": {"rank_percent", "refresh_every"},
     "sft": set(),
     "sdft": {
         "demo_mode",
@@ -97,8 +97,7 @@ def _read_yaml(path: Path) -> dict[str, Any]:
 def _require_keys(path: Path, config: dict[str, Any], expected: set[str]) -> None:
     if set(config) != expected:
         raise ValueError(
-            f"{path} must contain exactly {sorted(expected)}; "
-            f"found {sorted(config)}"
+            f"{path} must contain exactly {sorted(expected)}; found {sorted(config)}"
         )
 
 
@@ -157,5 +156,15 @@ def load_method(config_dir: Path, name: str) -> tuple[dict[str, Any], Path]:
         raise ValueError(f"unknown method {name!r}; choose from {METHODS}")
     path = config_dir / "method" / f"{name}.yaml"
     config = _read_yaml(path)
+    if name == "sst":
+        config.setdefault("refresh_every", None)
     _require_keys(path, config, METHOD_KEYS[name])
+    if name == "sst":
+        refresh_every = config["refresh_every"]
+        if refresh_every is not None and (
+            isinstance(refresh_every, bool)
+            or not isinstance(refresh_every, int)
+            or refresh_every < 1
+        ):
+            raise ValueError("refresh_every must be a positive integer or null")
     return config, path

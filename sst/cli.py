@@ -64,6 +64,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--report-to", default="none")
     result.add_argument("--deepspeed-bin", default="deepspeed")
     result.add_argument(
+        "--refresh-every",
+        type=int,
+        help="For SST, refresh after this many successful optimizer updates.",
+    )
+    result.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the resolved DeepSpeed command without starting training.",
@@ -92,7 +97,10 @@ def _gradient_accumulation(model: ModelConfig, num_gpus: int) -> int:
 
 def _method_arguments(method: str, config: dict[str, Any]) -> list[str]:
     if method == "sst":
-        return ["--rank-percent", _value(config["rank_percent"])]
+        result = ["--rank-percent", _value(config["rank_percent"])]
+        if config["refresh_every"] is not None:
+            result.extend(["--refresh-every", _value(config["refresh_every"])])
+        return result
     if method == "sft":
         return []
     if method == "sdft":
@@ -157,6 +165,12 @@ def build_plan(argv: Sequence[str] | None = None) -> RunPlan:
         thinking=args.thinking,
     )
     method_config, method_path = load_method(config_dir, args.method)
+    if args.refresh_every is not None:
+        if args.method != "sst":
+            raise ValueError("--refresh-every is only supported with --method sst")
+        if args.refresh_every < 1:
+            raise ValueError("--refresh-every must be positive")
+        method_config["refresh_every"] = args.refresh_every
     grad_accum = _gradient_accumulation(model, args.num_gpus)
 
     worker = ROOT / "sst" / "methods" / f"{args.method}.py"

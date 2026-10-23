@@ -106,8 +106,13 @@ optimizer.zero_grad()
 ```
 
 Use SGD, AdamW, Muon, or another compatible optimizer as the inner optimizer.
-The basis stays fixed and is included in `optimizer.state_dict()`. It is never
-silently recomputed from trained weights when restoring a checkpoint.
+The basis stays fixed by default. For periodic refresh, pass
+`refresh_every=100`; for manual refresh, call `optimizer.refresh()` on every
+owning rank at the same boundary. Refresh re-anchors to current weights without
+changing parameters, gradients, or inner optimizer state. Only successful,
+projected optimizer updates advance the interval; skipped steps do not.
+Checkpoints preserve the active basis and refresh clock without an extra SVD
+on restore. Refresh protects the latest anchor, not the original initialization.
 
 ## Native Transformers integration
 
@@ -124,7 +129,11 @@ trainer = Trainer(
     train_dataset=train_dataset,
     optimizer_wrapper=(
         SST,
-        {"rank_fraction": 0.99, "target_modules": [r".*self_attn.*", r".*mlp.*"]},
+        {
+            "rank_fraction": 0.99,
+            "target_modules": [r".*self_attn.*", r".*mlp.*"],
+            "refresh_every": 100,  # Omit for the default fixed-basis behavior.
+        },
     ),
 )
 trainer.train()
@@ -143,8 +152,14 @@ pip install "transformers @ git+https://github.com/Arnav0400/transformers.git@co
 The wrapper has shard-aware paths for DDP, FSDP1 (original or flat parameters),
 FSDP2/DTensor, and DeepSpeed ZeRO-1/2/3. The inner optimizer must support the
 chosen backend and parameter layout. All participating ranks must step the
-wrapper. Exact projection uses fp32 parameters or fp32 optimizer master weights;
+wrapper with the same refresh schedule and collectively call any manual
+refresh. Bases are synchronized within their owning groups, including hybrid
+mesh axes, without mixing independent submeshes.
+Exact projection uses fp32 parameters or fp32 optimizer master weights;
 direct bf16/fp16 parameter projection has rounding error.
+
+The recipe also accepts `bash scripts/train_sst.sh science --refresh-every 100`,
+or `refresh_every: 100` in `configs/method/sst.yaml`; the default is `null`.
 
 See the [integration guide](docs/huggingface-integration.md)
 for lifecycle, checkpointing, validation commands, and limitations.

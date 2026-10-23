@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
 from sst.cli import build_plan
-from sst.config import METHODS, ROOT
+from sst.config import METHODS, ROOT, load_method
 
 
 class SSTCliTest(unittest.TestCase):
@@ -23,6 +24,7 @@ class SSTCliTest(unittest.TestCase):
         *,
         num_gpus: int = 8,
         data_path: str | None = None,
+        refresh_every: int | None = None,
     ):
         argv = [
             "--method",
@@ -37,6 +39,8 @@ class SSTCliTest(unittest.TestCase):
         ]
         if data_path:
             argv.extend(["--data-path", data_path])
+        if refresh_every is not None:
+            argv.extend(["--refresh-every", str(refresh_every)])
         return build_plan(argv)
 
     def test_all_methods_resolve(self) -> None:
@@ -66,13 +70,14 @@ class SSTCliTest(unittest.TestCase):
                         dataset_id,
                     )
 
-    def test_sst_exposes_only_rank_percent(self) -> None:
+    def test_sst_defaults_to_a_fixed_basis(self) -> None:
         config = yaml.safe_load(
             (ROOT / "configs/method/sst.yaml").read_text(encoding="utf-8")
         )
-        self.assertEqual(config, {"rank_percent": 99})
+        self.assertEqual(config, {"rank_percent": 99, "refresh_every": None})
         command = self.plan("sst").command
         self.assertEqual(self.option(command, "--rank-percent"), "99")
+        self.assertNotIn("--refresh-every", command)
         for forbidden in (
             "--constraint-mode",
             "--proj-update",
@@ -80,6 +85,37 @@ class SSTCliTest(unittest.TestCase):
             "--refresh-svd-every-k",
         ):
             self.assertNotIn(forbidden, command)
+
+    def test_sst_refresh_override_is_forwarded(self) -> None:
+        plan = self.plan("sst", refresh_every=10)
+        self.assertEqual(plan.method_config["refresh_every"], 10)
+        self.assertEqual(self.option(plan.command, "--refresh-every"), "10")
+
+    def test_refresh_rejects_nonpositive_intervals_and_other_methods(self) -> None:
+        for interval in (0, -1):
+            with self.subTest(interval=interval):
+                with self.assertRaisesRegex(ValueError, "must be positive"):
+                    self.plan("sst", refresh_every=interval)
+        for method in METHODS:
+            if method != "sst":
+                with self.subTest(method=method):
+                    with self.assertRaisesRegex(ValueError, "only supported"):
+                        self.plan(method, refresh_every=10)
+
+    def test_old_rank_only_configs_remain_compatible(self) -> None:
+        with patch("sst.config._read_yaml", return_value={"rank_percent": 99}):
+            config, _ = load_method(ROOT / "configs", "sst")
+        self.assertEqual(config, {"rank_percent": 99, "refresh_every": None})
+
+    def test_refresh_config_validation(self) -> None:
+        for interval in (0, -1, True, 1.5, "2"):
+            with self.subTest(interval=interval):
+                with patch(
+                    "sst.config._read_yaml",
+                    return_value={"rank_percent": 99, "refresh_every": interval},
+                ):
+                    with self.assertRaisesRegex(ValueError, "positive integer"):
+                        load_method(ROOT / "configs", "sst")
 
     def test_shared_qwen3_defaults(self) -> None:
         expected = {

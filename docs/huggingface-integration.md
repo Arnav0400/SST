@@ -2,7 +2,7 @@
 
 SST takes an optimizer, calls that optimizer's `step()`, then projects the
 resulting parameter update outside fixed principal left and right weight
-subspaces.
+subspaces between refreshes.
 
 The inner optimizer receives the original gradients. Its momentum, variance,
 weight decay, and parameter groups are not rewritten by SST. The fixed singular
@@ -37,6 +37,22 @@ Schedulers use the wrapper's shared parameter groups normally. Closures and
 optimizer step/state-dictionary hooks are retained. AMP overflow and Accelerate
 gradient-accumulation skips do not project.
 
+### Manual and periodic refresh
+
+The default `refresh_every=None` preserves the initialization basis. Pass
+`refresh_every=100` to rebuild the basis after every 100 successful, projected
+optimizer updates, or call `optimizer.refresh()` explicitly. Refresh re-anchors
+to the current weights, changes no parameters, gradients, or inner optimizer
+state, and restarts the interval. It protects the latest anchor rather than
+the original initialization. Skipped accumulation and AMP-overflow steps do not
+advance the clock. `initialize()` only adds new targets.
+
+All owning ranks must use the same schedule and call any manual refresh in the
+same order. One elected source computes each basis and synchronizes it through
+its owning DDP, FSDP, DTensor, or ZeRO groups, including both hybrid mesh axes.
+Independent submeshes retain independent bases. Ordinary SVD failures propagate
+to the owners without replacing the active bases.
+
 ## Native Transformers implementation
 
 The Transformers contribution contains its own implementation in
@@ -63,7 +79,11 @@ trainer = Trainer(
     train_dataset=train_dataset,
     optimizer_wrapper=(
         SST,
-        {"rank_fraction": 0.99, "target_modules": [r".*self_attn.*", r".*mlp.*"]},
+        {
+            "rank_fraction": 0.99,
+            "target_modules": [r".*self_attn.*", r".*mlp.*"],
+            "refresh_every": 100,
+        },
     ),
 )
 trainer.train()
@@ -106,7 +126,8 @@ inner optimizer's state. Their merge does not imply approval of SST.
 | DeepSpeed ZeRO-1/2 | Projects the full fp32 master parameter and updates the low-precision model copy. |
 | DeepSpeed ZeRO-3 | Projects fp32 master partitions and writes the rounded result back through gathered model parameters. |
 
-All participating ranks must call the wrapper. In a custom Accelerate loop,
+All participating ranks must call the wrapper with the same refresh schedule.
+In a custom Accelerate loop,
 attach SST **after** `accelerator.prepare`. Trainer handles this ordering.
 
 The inner optimizer must support the backend and parameter layout itself.
@@ -127,21 +148,23 @@ Autocast bf16/fp16 compute with fp32 optimizer parameters is supported. Direct
 bf16/fp16 parameter writeback is approximate. XLA, SageMaker model parallelism,
 and differentiable optimizer steps are not supported.
 
-Initialization performs an SVD per target. Bases are kept on CPU, and distributed
-steps require gathers. These costs are significant for large models; the
+Initialization and refresh perform an SVD per target. Bases are kept on CPU,
+and distributed steps require gathers. Periodic refresh adds SVD and basis
+synchronization costs. These costs are significant for large models; the
 correctness tests are not throughput or large-model benchmarks.
 
 ## Checkpoint ownership
 
-An ordinary `optimizer.state_dict()` includes all inner state plus the fixed
-basis under `"sst"`. To restore a custom loop without a fresh SVD:
+An ordinary `optimizer.state_dict()` includes all inner state plus the active
+basis, schedule, and refresh counters under `"sst"`. To restore a custom loop
+without a fresh SVD:
 
 ```python
 optimizer = SST(inner_optimizer, model=model, initialize=False)
 optimizer.load_state_dict(saved_optimizer_state)
 ```
 
-Trainer saves the original basis automatically. FSDP and DeepSpeed retain their
+Trainer saves the active basis and refresh clock automatically. FSDP and DeepSpeed retain their
 native optimizer checkpoints and additionally save `sst_state.pt`, because
 engine checkpoint conversion does not retain arbitrary wrapper keys.
 Subgroup/submesh-owned targets instead use `sst_state_rank_<rank>.pt`, with
@@ -152,7 +175,10 @@ is true. These rank-specific checkpoints require the same topology on resume.
 The FSDP1 sharded restore path allocates saved optimizer buffers from checkpoint
 metadata. It does not take a dummy optimizer step to create state. Missing or
 mismatched bases fail explicitly; they are never rebuilt from trained weights.
-The rank and basis in the checkpoint take precedence when resuming.
+The rank, basis, and refresh schedule in the checkpoint take precedence when
+resuming, so scheduled refresh continues at the same successful-update boundary.
+Version-1 fixed-basis checkpoints remain compatible and restore with refresh
+disabled and counters at zero.
 
 FSDP sharded training checkpoints are distinct from a consolidated model export.
 Before `trainer.save_model()` for ordinary `from_pretrained()` inference, request
@@ -171,9 +197,11 @@ RUN_SLOW=1 python -m pytest tests/trainer/distributed/test_trainer_distributed_s
 The distributed script uses a small randomly initialized Llama and synthetic
 tokens, without model downloads. It checks training, evaluation, saved-model
 generation, unchanged inner optimizer state during projection, protected
-subspaces, replica equality, and fixed-basis checkpoint resume without SVD.
-An additional four-GPU DTensor test checks separate two-rank submeshes and
-rejects another rank's fixed-basis checkpoint.
+subspaces, replica equality, and active-basis checkpoint restore without an
+extra SVD. It runs with both fixed and periodic bases and exercises manual
+refresh. Four-GPU tests cover FSDP1/2 hybrid meshes and independent, permuted
+DTensor submeshes, including exact resume across refresh boundaries, wrong-rank
+checkpoint rejection, and source-rank refresh failure propagation.
 The PR records the actual tested optimizer/backend/precision configurations.
 
 The standalone repository's tests run with:

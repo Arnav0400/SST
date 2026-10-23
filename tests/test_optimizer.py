@@ -49,26 +49,22 @@ class SSTOptimizerTest(unittest.TestCase):
             "Adafactor",
             "Muon",
         )
-        for name in names:
+        for name, refresh_every in ((name, every) for name in names for every in (None, 1)):
             if not hasattr(torch.optim, name):
                 continue
-            with self.subTest(optimizer=name):
+            with self.subTest(optimizer=name, refresh_every=refresh_every):
                 self.setUp()
-                parameters = (
-                    [self.model[0].weight]
-                    if name == "Muon"
-                    else self.model.parameters()
-                )
+                parameters = [self.model[0].weight] if name == "Muon" else self.model.parameters()
                 inner = getattr(torch.optim, name)(parameters, lr=0.05)
                 optimizer = SST(
-                    inner, model=self.model, rank_fraction=0.5, target_modules=["0"]
+                    inner,
+                    model=self.model,
+                    rank_fraction=0.5,
+                    target_modules=["0"],
+                    refresh_every=refresh_every,
                 )
                 raw_state = []
-                inner.register_step_post_hook(
-                    lambda *_: raw_state.append(
-                        copy.deepcopy(inner.state_dict()["state"])
-                    )
-                )
+                inner.register_step_post_hook(lambda *_: raw_state.append(copy.deepcopy(inner.state_dict()["state"])))
                 for parameter in self.model.parameters():
                     parameter.grad = torch.randn_like(parameter)
                 optimizer.step()
@@ -84,10 +80,82 @@ class SSTOptimizerTest(unittest.TestCase):
                                 atol=0,
                             )
                         else:
-                            self.assertEqual(
-                                value, inner.state_dict()["state"][key][state_name]
-                            )
+                            self.assertEqual(value, inner.state_dict()["state"][key][state_name])
                 self.assert_protected(optimizer)
+                self.assertEqual(optimizer.num_updates, 1)
+                self.assertEqual(optimizer.num_refreshes, 0 if refresh_every is None else 1)
+
+    def test_manual_refresh_preserves_current_weights_and_inner_optimizer_state(self):
+        inner = torch.optim.AdamW(self.model.parameters(), lr=0.05)
+        optimizer = SST(inner, model=self.model, rank_fraction=0.5)
+        self.model[0].weight.grad = torch.randn_like(self.model[0].weight)
+        optimizer.step()
+        with torch.no_grad():
+            self.model[0].weight.add_(torch.randn_like(self.model[0].weight))
+        weights = copy.deepcopy(self.model.state_dict())
+        state = copy.deepcopy(inner.state_dict())
+        optimizer.refresh()
+        for key, value in weights.items():
+            torch.testing.assert_close(value, self.model.state_dict()[key], rtol=0, atol=0)
+        for key, values in state["state"].items():
+            for field, value in values.items():
+                if isinstance(value, torch.Tensor):
+                    torch.testing.assert_close(value, inner.state_dict()["state"][key][field], rtol=0, atol=0)
+                else:
+                    self.assertEqual(value, inner.state_dict()["state"][key][field])
+        self.assertEqual(
+            (
+                optimizer.num_updates,
+                optimizer.last_refresh_step,
+                optimizer.num_refreshes,
+            ),
+            (1, 1, 1),
+        )
+        self.assert_protected(optimizer)
+
+    def test_refresh_clock_is_restored_without_an_extra_svd(self):
+        optimizer = SST(
+            torch.optim.SGD(self.model.parameters(), lr=0.1, momentum=0.9),
+            model=self.model,
+            rank_fraction=0.5,
+            refresh_every=3,
+        )
+        self.model[0].weight.grad = torch.randn_like(self.model[0].weight)
+        for _ in range(2):
+            optimizer.step()
+        state = copy.deepcopy(optimizer.state_dict())
+        with patch("torch.linalg.svd", side_effect=AssertionError("Restore must not refresh")):
+            restored = SST(
+                torch.optim.SGD(self.model.parameters()),
+                model=self.model,
+                initialize=False,
+            )
+            restored.load_state_dict(state)
+        self.assertEqual(
+            (restored.refresh_every, restored.num_updates, restored.num_refreshes),
+            (3, 2, 0),
+        )
+        restored.step()
+        self.assertEqual(
+            (restored.num_updates, restored.last_refresh_step, restored.num_refreshes),
+            (3, 3, 1),
+        )
+        self.assert_protected(restored)
+
+    def test_refresh_failures_do_not_replace_the_active_basis(self):
+        optimizer = SST(
+            torch.optim.AdamW(self.model.parameters()),
+            model=self.model,
+            rank_fraction=0.5,
+        )
+        before = copy.deepcopy(optimizer.sst_state_dict())
+        with patch("torch.linalg.svd", side_effect=RuntimeError("Injected failure")):
+            with self.assertRaisesRegex(RuntimeError, "active basis was not replaced"):
+                optimizer.refresh()
+        self.assertEqual(optimizer.num_refreshes, 0)
+        for first, second in zip(before["protected_weights"], optimizer.sst_state_dict()["protected_weights"]):
+            for key in ("left", "right", "singular_values"):
+                torch.testing.assert_close(first[key], second[key], rtol=0, atol=0)
 
     def test_checkpoint_restores_fixed_basis_without_svd(self):
         optimizer = SST(
@@ -139,9 +207,7 @@ class SSTOptimizerTest(unittest.TestCase):
                 setattr(inner, attribute, [[self.model[0].weight]])
                 self.model[0].weight._hp_mapping = None
                 optimizer = SST(inner, model=self.model, initialize=False)
-                self.assertEqual(
-                    [name for name, _ in optimizer._parameters()], ["0.weight"]
-                )
+                self.assertEqual([name for name, _ in optimizer._parameters()], ["0.weight"])
 
 
 if __name__ == "__main__":

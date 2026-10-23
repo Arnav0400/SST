@@ -38,7 +38,7 @@ count, and micro-batch size. For example, the default recipe uses accumulation
 
 | File | Main controls |
 |---|---|
-| `method/sst.yaml` | protected singular-direction percentage |
+| `method/sst.yaml` | protected singular-direction percentage and optional refresh interval |
 | `method/sft.yaml` | no method-specific settings |
 | `method/sdft.yaml` | generation, reference mix, and vLLM settings |
 | `method/oplora.yaml` | LoRA and projection ranks, target matrices |
@@ -46,6 +46,11 @@ count, and micro-batch size. For example, the default recipe uses accumulation
 
 See the [method guide](../sst/methods/README.md) for the behavior behind each
 setting.
+
+For SST, `refresh_every: null` is the default fixed-basis mode. Set a positive
+integer to refresh after that many successful optimizer updates, or override
+it with `--refresh-every 100`. Old rank-only SST configurations remain compatible.
+On resume, the checkpoint's active basis and refresh schedule take precedence.
 
 ## Dataset settings
 

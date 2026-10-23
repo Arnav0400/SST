@@ -25,14 +25,19 @@ Targeted matrices are `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`,
 ```yaml
 # configs/method/sst.yaml
 rank_percent: 99
+refresh_every: null
 ```
 
 `rank_percent` is the percentage of singular directions protected on each side.
-It must be between 0 and 100. The public launcher currently implements the
-fixed-basis, no-refresh SST variant.
+It must be between 0 and 100. `refresh_every: null` keeps the fixed-basis
+variant. A positive integer re-anchors after that many successful optimizer
+updates; skipped steps do not advance the clock. Resume restores the active
+basis and schedule. Refresh protects the latest anchor, not the original
+initialization, and adds SVD/communication costs.
 
 ```bash
 bash scripts/train_sst.sh science
+bash scripts/train_sst.sh science --refresh-every 100
 ```
 
 ## SFT
